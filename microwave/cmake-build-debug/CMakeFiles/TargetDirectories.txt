@@ -1,0 +1,3 @@
+C:/Users/jvgli/CLionProjects/microwave/cmake-build-debug/CMakeFiles/microwave.dir
+C:/Users/jvgli/CLionProjects/microwave/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/jvgli/CLionProjects/microwave/cmake-build-debug/CMakeFiles/rebuild_cache.dir
