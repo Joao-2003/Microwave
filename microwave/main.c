@@ -112,7 +112,7 @@ void *heating_cycle(void *args) {
             light_control(false); // Desliga a luz
             pthread_exit(NULL);
         }
-        rotate_plate();
+        printf("Tempo restante: %d segundos\n", remaining_time);
         sleep(1); // Simula 1 segundo de aquecimento
     }
 
