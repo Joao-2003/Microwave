@@ -1,28 +1,31 @@
 /* main.c - Micro-ondas com Xinu AVR */
 
 #include <xinu.h>
-
-#define MAX_PROGRAMS     5
 #define MAX_TIME         3600    // 1 hora em segundos
-#define HEATING_STACK    2048    // Tamanho da pilha para processo de aquecimento
+#define HEATING_STACK    (1<<8)    // Tamanho da pilha para processo de aquecimento
 #define HEATING_PRIO     20      // Prioridade do processo
+
+typedef enum {
+    P_MEAT = 0,
+    P_FISH,
+    P_CHICKEN,
+    P_LASANHA,
+    P_POPCORN,
+    P_MAX
+} Program;
 
 
 /* Estruturas de dados */
 typedef struct {
-    char name[20];
-    int time;        // Tempo em segundos
-    int power;       // Nível de potência (1-10)
-} Program;
+    char *name;
+    unsigned char time;        // Tempo em segundos
+    unsigned char power;       // Nível de potência (1-10)
+} Program_t;
 
-typedef struct {
-    char name[20];
-    int time;
-    int power;
-} HeatingArgs;
+typedef Program_t HeatingArgs;
 
 /* Programas pré-definidos */
-const Program programs[MAX_PROGRAMS] = {
+const Program_t programs[P_MAX] = {
     {"Carnes", 300, 8},
     {"Peixe", 200, 6},
     {"Frango", 250, 7},
@@ -48,7 +51,7 @@ void beep(void);
 
 /* Controle da luz interna */
 void light_control(bool8 on) {
-    kprintf(on ? "\n>> Luz interna: LIGADA" : "\n>> Luz interna: DESLIGADA");
+    kprintf(on ? "\n>> Luz: ON" : "\n>> Luz: OFF");
 }
 
 /* Rotação do prato */
@@ -97,33 +100,39 @@ void heating_process(int32 args, int32 dummy) {
     heating_pid = -1;
 }
 
+typedef enum {
+    OPPROG = 1,
+    OPTMP,
+    OPCANC,
+    OPEXIT
+} Opt;
+
 /* Menu principal */
 void display_menu(void) {
-    kprintf("\n\n=== MICROONDAS Xinu ===");
-    kprintf("\n1 - Programas pre-definidos");
+    kprintf("\n\n===MICROONDAS===");
+    kprintf("\n1 - Programas");
     kprintf("\n2 - Tempo manual");
-    kprintf("\n3 - Cancelar operacao");
+    kprintf("\n3 - Cancelar");
     kprintf("\n4 - Sair");
-    kprintf("\n========================");
-    kprintf("\nSelecione: ");
+    kprintf("\n\nSelecione: ");
 }
 
 /* Seleção de programa */
 void choose_program(void) {
-    char c;
+    char input[2];  // Buffer para capturar entrada do usuário
     int choice;
     
     kprintf("\n\n=== PROGRAMAS ===");
-    for(int i=0; i<MAX_PROGRAMS; i++) {
+    for(int i=0; i<P_MAX; i++) {
         kprintf("\n%d - %s (%ds @ %dW)", 
             i+1, programs[i].name, programs[i].time, programs[i].power);
     }
     kprintf("\nEscolha: ");
     
-    c = getchar();
-    choice = c - '0' - 1;
+    read(CONSOLE, input, sizeof(input));
+    choice = input[0] - '0';  // Converte o caractere para um número inteiro
 
-    if(choice >= 0 && choice < MAX_PROGRAMS) {
+    if(choice >= 0 && choice < P_MAX) {
         HeatingArgs *args = (HeatingArgs *)getmem(sizeof(HeatingArgs));
         strlcpy(args->name, programs[choice].name, 20);
         args->time = programs[choice].time;
@@ -171,7 +180,7 @@ void emergency_stop(void) {
 
 /* Processo principal */
 process main(void) {
-    char c;
+    char input[2];  // Buffer para capturar entrada do usuário
     int choice;
     
     // Inicialização do sistema
@@ -181,23 +190,23 @@ process main(void) {
     while(TRUE) {
         display_menu();
         
-        c = getchar();
-        choice = c - '0';
+        read(CONSOLE, input, sizeof(input));
+        choice = input[0] - '0';  // Converte o caractere para um número inteiro
         
         switch(choice) {
-            case 1:
+            case OPPROG:
                 choose_program();
                 break;
                 
-            case 2:
+            case OPTMP:
                 set_manual_time();
                 break;
                 
-            case 3:
+            case OPCANC:
                 emergency_stop();
                 break;
                 
-            case 4:
+            case OPEXIT:
                 kprintf("\nDesligando...");
                 return OK;
                 
