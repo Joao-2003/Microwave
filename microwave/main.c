@@ -62,7 +62,6 @@ void rotate_plate(void) {
 /* Sistema de resfriamento */
 void cooling(void) {
     kprintf("\n>> Resfriando...");
-    sleep(5);
     kprintf("\n>> Pronto para uso!");
 }
 
@@ -88,7 +87,6 @@ void heating_process(int32 args, int32 dummy) {
         
         rotate_plate();
         kprintf("\n>> Tempo restante: %d segundos", i);
-        sleep(1);
     }
 
     light_control(FALSE);
